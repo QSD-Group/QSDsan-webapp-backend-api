@@ -1,5 +1,29 @@
+"""
+What does this file do?
+It creates a blueprint for the htl endpoints our app.
+It imports the htl service functions from app/services/htl_service.py.
+It defines the htl_bp blueprint.
+It defines two routes for the htl_bp blueprint:
+One route is for the htl_calc_data function, which calculates the price and greenhouse gas emissions of HTL products.
+The other route is for the htl_county_data function, which returns the HTL conversion efficiency for a given county.
+
+What are the routes in this file?
+/htl/calc
+/htl/county
+
+What does the file depend on?
+app/services/htl_service.py.
+- htl_convert_sludge_mass_kg_hr
+- htl_calc
+- htl_county
+
+Where is this file used?
+app/__init__.py
+- app.register_blueprint(htl_bp, url_prefix='/api/v1') # Registers the htl_bp blueprint with the app.
+"""
+
 from flask import Blueprint, request, jsonify, make_response # Flask Version 3.0.3
-from app.services.htl_service import htl_calc, htl_county, htl_convert_kg
+from app.services.htl_service import htl_calc, htl_county, htl_convert_sludge_mass_kg_hr as htl_convert_kg
 
 htl_bp = Blueprint('htl_bp', __name__)
 
@@ -229,3 +253,4 @@ def htl_county_data():
     return make_response(
         jsonify({"message": "Unexpected error"}), 500
     )
+    

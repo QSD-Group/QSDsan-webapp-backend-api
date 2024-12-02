@@ -1,5 +1,28 @@
+"""
+What does the file do?
+- This file contains the routes for the fermentation blueprint.
+- The fermentation blueprint contains routes for the fermentation calculations.
+- The fermentation calculations include the mass of the feed
+- The ethanol produced in MM gallons/year
+- The price of ethanol in $/gallon
+- The greenhouse gas emissions in lb CO2e/gallon
+- The fermentation conversion efficiency for a county
+
+What are the routes in this file?
+- /fermentation/calc
+- /fermentation/county
+
+What does the file depend on?
+app/services/fermentation_service.py
+- fermentation_convert_feedstock_kg_hr
+- fermentation_calc
+- fermentation_county
+
+Where is this file used?
+app/__init__.py
+"""
 from flask import Blueprint, request, jsonify, make_response
-from app.services.fermentation_service import fermentation_calc, fermentation_county, fermentation_kg
+from app.services.fermentation_service import fermentation_calc, fermentation_county, fermentation_convert_feedstock_kg_hr as fermentation_kg
 
 fermentation_bp = Blueprint('fermentation_bp', __name__)
 
@@ -197,4 +220,35 @@ def fermentation_county_data():
                   type: string
                   example: 'Unexpected error'
     """
+    
+    county_name = request.args.get('county_name', None)
+    
+    if not county_name:
+        return make_response(
+            jsonify({"error": "County name is required"}), 400 # Bad request
+        )
+        
+    try:
+      result = fermentation_county(county_name)
+    except ValueError:
+      return make_response(
+          jsonify({"error": "County not found"}), 404 # Not found
+      )
+    except Exception as e:
+      return make_response(
+          jsonify({"error": str(e)}), 500 # Unexpected error
+      )
+    
+    name, mass, ethanol, price, gwp = result
+    response_data = {
+        "county_name": name, # County name
+        "mass": mass, # In kg/hr
+        "ethanol": ethanol, # In MM gallons/year
+        "price": price, # In $/gallon
+        "gwp": gwp # In lb CO2e/gallon
+    }
+    return make_response(
+        jsonify(response_data), 200 # Returns a success status code
+    )
+    
     

@@ -11,6 +11,7 @@ Where is this file used in the project?
 
 What does this file rely on?
 1. STATE_DATA = pd.read_csv("app\data\htl\sludge_data_dmt.csv") - This file is used to extract data from the pdf, which is called by htl_county
+    Located at app\data\htl
 2. exposan.htl - Called by importing
 3. warnings, pandas, chaospy - Imported libraries
 """

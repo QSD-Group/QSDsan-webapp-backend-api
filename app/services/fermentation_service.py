@@ -11,7 +11,7 @@ Where are these functions used in the project?
 
 What does the file rely on?
 1. biosteam, biorefineries, pandas, warnings
-2. biomass_data.csv
+2. biomass_data.csv in app/data/fermentation
 """
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
