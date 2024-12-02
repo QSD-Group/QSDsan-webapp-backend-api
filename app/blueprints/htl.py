@@ -1,10 +1,79 @@
 from flask import Blueprint, request, jsonify, make_response # Flask Version 3.0.3
-from app.services.htl_service import htl_calc, htl_county, htl_convert_sludge_mass_kg
+from app.services.htl_service import htl_calc, htl_county, htl_convert_kg
 
 htl_bp = Blueprint('htl_bp', __name__)
 
-@htl_bp.route('/htl/calc', methods=['POST'])
+@htl_bp.route('/htl/calc', methods=['GET'])
 def htl_calc_data():
+    """
+    Takes in a sludge mass in a specified unit and returns the (i) mass of the sludge in kg/hr, (ii) price of the HTL product in $/gallon, (iii) greenhouse gas emissions in lb CO2e/gallon.
+    
+    URL Format - GET /htl/calc?sludge=sludge&unit=unit
+    ---
+    tags:
+      - HTL
+    parameters:
+      - name: sludge
+        in: query
+        type: number
+        format: float
+        required: true
+        description: The mass of the sludge
+        example: 100.0
+      - name: unit
+        in: query
+        type: string
+        required: false
+        description: The unit of the sludge mass, default is kg/hr
+        example: 'kghr, tons, tonnes, mgd, m3d'
+    responses:
+      200:
+        description: A successful response
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                sludge:
+                  type: float
+                  example: 100.0
+                price:
+                  type: float
+                  example: 0.0
+                gwp:
+                  type: float
+                  example: 0.0
+      400:
+        description: Bad request
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                error:
+                  type: string
+                  example: 'Sludge not provided'
+      422:
+        description: Unprocessable entity
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                error:
+                  type: string
+                  example: 'Invalid unit'
+      500:
+        description: Unexpected error
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                error:
+                  type: string
+                  example: 'Unexpected error'
+    """
     
     sludge = request.args.get('sludge', None)
     
@@ -13,8 +82,6 @@ def htl_calc_data():
             jsonify({"error": "Sludge not provided"}), 400 # Bad request, no sludge
         )
     
-    unit = request.args.get('unit', 'kghr')
-    
     try:
         sludge = float(sludge)
     except ValueError:
@@ -22,19 +89,26 @@ def htl_calc_data():
             jsonify({"error": "Sludge should be a number"}), 400 # Bad request, non-float sludge
         )
     
-    kg_hr = htl_convert_sludge_mass_kg(sludge, unit)
+    unit = request.args.get('unit', 'kghr')
     
+    if unit not in ['kghr', 'tons', 'tonnes', 'mgd', 'm3d']:
+        return make_response(
+            jsonify({"error": "Invalid unit"}), 422 # Bad request, invalid unit, unprocessable entity
+        )
+    
+    sludge = htl_convert_kg(sludge, unit) # Convert sludge to kg/hr
+        
     try:
         result = htl_calc(sludge)
     except TypeError as e:
         return make_response(
-            jsonify({"error": str(e)}), 400 # Bad request, non-float sludge
+            jsonify({"error": str(e)}), 500 # Unknown error, unexpected error
         )
         
     if result:
-        price, gwp = htl_calc(kg_hr)
+        price, gwp = htl_calc(sludge)
         response_data = {
-            "sludge": kg_hr, # In kg/hr
+            "sludge": sludge, # In kg/hr
             "price": price, # In $/gallon
             "gwp": gwp # In lb CO2e/gallon
         }
@@ -63,12 +137,6 @@ def htl_county_data():
         required: true
         description: 'The name of the county'
         example: 'Atlantic'
-      - name: unit
-        in: query
-        type: string
-        required: false
-        description: The unit of the sludge mass
-        example: 'kghr, tons, tonnes, mgd, m3d'
     responses:
       200:
         description: A successful response
@@ -80,15 +148,22 @@ def htl_county_data():
                 county_name:
                   type: string
                   example: 'Atlantic'
+                  description: 'Name of the county'
                 sludge:
-                  type: float
+                  type: number
+                  format: float
                   example: 0.0
+                  description: 'Mass of the sludge in kg/hr'
                 price:
-                  type: float
+                  type: number
+                  format: float
                   example: 0.0
+                  description: 'Price of the HTL product in $/gallon'
                 gwp:
                   type: float
+                  format: float
                   example: 0.0
+                  description: 'Global warming potential in lb CO2e/gallon'
       400:
         description: Bad request
         content:
@@ -132,20 +207,20 @@ def htl_county_data():
         result = htl_county(county_name)
     except ValueError:
         return make_response(
-            jsonify({"message": "County not found"}), 404
+            jsonify({"message": "County not found"}), 404 # Not found, county not found
         )
     except TypeError as e:
         return make_response(
-            jsonify({"message": str(e)}), 400
+            jsonify({"message": str(e)}), 400 # Bad request, non-float sludge
         )
     
     if result:
         name, sludge, price, gwp = result
         response_data = {
-            "county_name": name,
-            "sludge": sludge,
-            "price": price,
-            "gwp": gwp
+            "county_name": name, # County name
+            "sludge": sludge, # In kg/hr
+            "price": price, # In $/gallon
+            "gwp": gwp # In lb CO2e/gallon
         }
         return make_response(
             jsonify(response_data), 200
