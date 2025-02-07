@@ -1,7 +1,18 @@
 """
 What does this file do?
 
-It creates 
+It creates four important functions that willbe called throughout the project:
+1. combustion_convert_feedstock_kg_hr: 
+2. combustion_calc_raw:
+3. combustion_calc:
+4. combustion_county:
+
+Where are these functions used in the project?
+1. combustion.py - Blueprint for Flask
+
+What does this file rely on?
+1. biosteam, exposan, biorefineries, and pandas
+2. combustion_data.csv
 """
 import biosteam as bst
 from exposan import htl
