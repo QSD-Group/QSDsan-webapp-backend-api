@@ -251,7 +251,7 @@ def combustion_calc(mass, waste_type, compositions=COMPOSITIONS, dry_mass=None):
         avoided_emissions_percent # as a percentage of total emissions
     )
         
-STATE_DATA = pd.read_csv(r"backend\combustion\combustion_data.csv")
+STATE_DATA = pd.read_csv(r"app\data\combustion\combustion_data.csv")
 
 def combustion_county(county, waste_type, state_data=STATE_DATA, compositions=COMPOSITIONS):
     """

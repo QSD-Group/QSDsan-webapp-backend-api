@@ -281,8 +281,8 @@ if __name__ == '__main__':
     
     # Test 1 - Fermentation Convert Feedstock kg/hr
     # Test 1 A - Test for valid inputs
-    print(fermentation_convert_feedstock_kg_hr(100, 'tons')) # 0.011363636363636364
-    print(fermentation_convert_feedstock_kg_hr(100, 'tonnes')) # 0.011363636363636364
+    print(fermentation_convert_feedstock_kg_hr(100, 'tons')) # 10.356
+    print(fermentation_convert_feedstock_kg_hr(100, 'tonnes')) # 11.416
     print(fermentation_convert_feedstock_kg_hr(100, 'kghr')) # 100
     
     # Test 1 B - Test for invalid inputs
